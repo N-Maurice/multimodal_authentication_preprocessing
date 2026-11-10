@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+.env
+# Biometric samples require each participant's consent before sharing.
+# Review data/raw before committing; do not publish without consent.
