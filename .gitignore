@@ -13,3 +13,6 @@ models/face_model.joblib
 data/processed/image_features.csv
 data/processed/face_manifest.csv
 reports/face/
+data/processed/images/
+data/processed/processed_image_manifest.csv
+data/processed/processed_image_skipped.csv

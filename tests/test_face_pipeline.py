@@ -1,4 +1,6 @@
 """Source isolation and rejection behavior; no downloaded weights required."""
+from pathlib import Path
+
 import joblib
 import numpy as np
 import pandas as pd
@@ -86,3 +88,41 @@ def test_filters_preserve_rgb_shape_and_original():
     np.testing.assert_array_equal(variants['original'], rgb)
     for image in variants.values():
         assert np.asarray(image).shape == rgb.shape
+
+
+def test_processed_export_writes_twelve_named_images_and_preserves_splits(tmp_path):
+    from face_auth.preparation import export_processed_images
+    raw = tmp_path / 'raw'
+    for user_index, (user, count) in enumerate([('maurice', 3), ('larissa', 3), ('kudakwashe', 1)]):
+        folder = raw / user
+        folder.mkdir(parents=True)
+        for number in range(count):
+            # Each source has distinct pixels so inventory does not collapse it.
+            Image.new('RGB', (40, 40), (number * 60, user_index * 60, 30)).save(folder / f'Expression {number}.png')
+    manifest = split_sources(inventory(raw))
+    output = tmp_path / 'processed/images'
+    exported, skipped = export_processed_images(manifest, output)
+    assert exported.groupby('user_id').size().to_dict() == {'larissa': 12, 'maurice': 12}
+    assert skipped.user_id.tolist() == ['kudakwashe']
+    assert exported.groupby('source_id').size().eq(4).all()
+    assert exported.groupby('source_id').split.nunique().eq(1).all()
+    for row in exported.itertuples():
+        path = Path(row.output_path)
+        assert path.is_file()
+        assert path.name.startswith(row.user_id + '__source_')
+        assert path.name.endswith('__' + row.augmentation + '.png')
+        assert ' ' not in path.name
+    assert (output.parent / 'processed_image_manifest.csv').is_file()
+    # Reruns cannot multiply the prepared dataset.
+    export_processed_images(manifest, output)
+    assert len(list(output.rglob('*.png'))) == 24
+
+
+def test_each_notebook_code_cell_has_preceding_markdown():
+    import json
+    from pathlib import Path
+    notebook_path = Path(__file__).resolve().parents[1] / 'notebooks/02_face_recognition.ipynb'
+    cells = json.loads(notebook_path.read_text())['cells']
+    for index, cell in enumerate(cells):
+        if cell['cell_type'] == 'code':
+            assert index > 0 and cells[index - 1]['cell_type'] == 'markdown'

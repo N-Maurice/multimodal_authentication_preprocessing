@@ -136,3 +136,23 @@ checked, and a second offline notebook run passed with separate project,
 working, weight and output directories. Actual hosted Colab/Kaggle sessions have
 not been run here; their configuration and writable-path behavior are supported
 and were checked locally.
+
+## Save three original images as twelve processed files
+
+Every code cell has a preceding Markdown explanation. Run notebook section
+**5.1: Save 12 processed images per person from three originals** after the
+source-splitting cell. It creates actual PNGs under
+`data/processed/images/<user_id>/` in the configured output root.
+
+For each eligible person, the first three valid originals in filename order
+produce four versions apiece: original, +8-degree rotation, horizontal flip and
+grayscale. Each person gets twelve files total, including the three original
+copies. Filenames contain user ID, source number, original stem, hash and
+transform. Repeated runs reuse the same filenames.
+
+`processed_image_manifest.csv` records each saved file's original source and
+split; `processed_image_skipped.csv` lists skipped people. People with fewer than
+three originals need more independent captures before expansion. The current
+input produces twelve images each for Maurice and Larissa; Kudakwashe is skipped.
+These exported images are not loaded back into training. Validation/test
+variants retain their original partitions and are not independent test samples.
