@@ -84,13 +84,14 @@ def test_invalid_embeddings_fail_closed(X):
 def test_filters_preserve_rgb_shape_and_original():
     rgb = np.full((112, 112, 3), 128, dtype=np.uint8)
     variants = image_variants(rgb)
-    assert len(variants) >= 3
+    assert len(variants) == 12
+    assert {'clahe', 'gamma_080', 'median_blur_3'} <= variants.keys()
     np.testing.assert_array_equal(variants['original'], rgb)
     for image in variants.values():
         assert np.asarray(image).shape == rgb.shape
 
 
-def test_processed_export_writes_twelve_named_images_and_preserves_splits(tmp_path):
+def test_processed_export_writes_twenty_one_named_images_and_preserves_splits(tmp_path):
     from face_auth.preparation import export_processed_images
     raw = tmp_path / 'raw'
     for user_index, (user, count) in enumerate([('maurice', 3), ('larissa', 3), ('kudakwashe', 1)]):
@@ -102,9 +103,9 @@ def test_processed_export_writes_twelve_named_images_and_preserves_splits(tmp_pa
     manifest = split_sources(inventory(raw))
     output = tmp_path / 'processed/images'
     exported, skipped = export_processed_images(manifest, output)
-    assert exported.groupby('user_id').size().to_dict() == {'larissa': 12, 'maurice': 12}
+    assert exported.groupby('user_id').size().to_dict() == {'larissa': 21, 'maurice': 21}
     assert skipped.user_id.tolist() == ['kudakwashe']
-    assert exported.groupby('source_id').size().eq(4).all()
+    assert exported.groupby('source_id').size().eq(7).all()
     assert exported.groupby('source_id').split.nunique().eq(1).all()
     for row in exported.itertuples():
         path = Path(row.output_path)
@@ -115,7 +116,7 @@ def test_processed_export_writes_twelve_named_images_and_preserves_splits(tmp_pa
     assert (output.parent / 'processed_image_manifest.csv').is_file()
     # Reruns cannot multiply the prepared dataset.
     export_processed_images(manifest, output)
-    assert len(list(output.rglob('*.png'))) == 24
+    assert len(list(output.rglob('*.png'))) == 42
 
 
 def test_each_notebook_code_cell_has_preceding_markdown():
@@ -126,3 +127,14 @@ def test_each_notebook_code_cell_has_preceding_markdown():
     for index, cell in enumerate(cells):
         if cell['cell_type'] == 'code':
             assert index > 0 and cells[index - 1]['cell_type'] == 'markdown'
+
+
+def test_new_filters_have_expected_pixel_effects():
+    rgb = np.full((32, 32, 3), 100, dtype=np.uint8)
+    rgb[16, 16] = 255
+    variants = image_variants(rgb)
+    assert np.asarray(variants['gamma_080'])[0, 0, 0] > rgb[0, 0, 0]
+    assert np.asarray(variants['median_blur_3'])[16, 16, 0] == 100
+    assert not np.array_equal(np.asarray(variants['clahe']), rgb)
+    for name in ['clahe', 'gamma_080', 'median_blur_3']:
+        assert np.asarray(variants[name]).dtype == np.uint8

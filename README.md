@@ -29,8 +29,7 @@ python -m pip install -r requirements.txt
 ```text
 .
 ├── README.md
-├── requirements.txt                 # Includes requirements/face.txt
-├── requirements/face.txt
+├── requirements.txt
 ├── environment-face.yml
 ├── docs/face_recognition.md
 ├── notebooks/02_face_recognition.ipynb
@@ -89,8 +88,8 @@ unverified faces are denied. Only load trusted model files. This classroom
 workflow has no liveness or replay defense. Obtain participant consent before
 sharing photographs, embeddings, models or executed notebook outputs.
 
-Notebook section **5.1** saves **12 processed PNGs per eligible person** from
-three originals (original, rotation, flip and grayscale per source). Files appear
+Notebook section **5.1** saves **21 processed PNGs per eligible person** from
+three originals (original, rotation, flip, grayscale, CLAHE, gamma and median blur per source). Files appear
 in `data/processed/images/<user_id>/` when the cell runs, with descriptive names
 and a provenance CSV. People with fewer than three originals are listed as
 skipped. The exported folder stays separate from model training to preserve

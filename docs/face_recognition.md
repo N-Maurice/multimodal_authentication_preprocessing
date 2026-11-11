@@ -15,7 +15,7 @@ training, evaluation and export, rather than supplying placeholder metrics.
 | `face_auth/pipeline.py` | Data audit, safe splits, training augmentation, classifier and rejection calibration |
 | `face_auth/__main__.py` | Face-only inference CLI |
 | `feature_extraction.py` | Reusable face extractor for training/inference parity |
-| `requirements/face.txt` | Face-only pip environment |
+| `requirements.txt` | Face-only pip environment |
 | `environment-face.yml` | Anaconda environment |
 | `tests/test_face_pipeline.py` | Data isolation, duplicate detection, rejection and serialization tests |
 
@@ -29,7 +29,7 @@ jupyter lab
 ```
 
 Select the `Python (multimodal-face)` kernel. For an existing environment, use
-`python -m pip install -r requirements/face.txt` with that environment activated.
+`python -m pip install -r requirements.txt` with that environment activated.
 The notebook prints its Python executable so you can verify the active kernel.
 No GPU or CUDA dependencies are needed. Do not install multiple OpenCV variants
 in the same environment; headless OpenCV works with Matplotlib in notebooks.
@@ -137,22 +137,33 @@ working, weight and output directories. Actual hosted Colab/Kaggle sessions have
 not been run here; their configuration and writable-path behavior are supported
 and were checked locally.
 
-## Save three original images as twelve processed files
+## Save three original images as twenty-one processed files
 
 Every code cell has a preceding Markdown explanation. Run notebook section
-**5.1: Save 12 processed images per person from three originals** after the
+**5.1: Save 21 processed images per person from three originals** after the
 source-splitting cell. It creates actual PNGs under
 `data/processed/images/<user_id>/` in the configured output root.
 
 For each eligible person, the first three valid originals in filename order
-produce four versions apiece: original, +8-degree rotation, horizontal flip and
-grayscale. Each person gets twelve files total, including the three original
+produce seven versions apiece: original, +8-degree rotation, horizontal flip,
+grayscale, CLAHE, gamma correction (0.8) and median blur (3×3). Each person gets
+twenty-one files total, including the three original
 copies. Filenames contain user ID, source number, original stem, hash and
 transform. Repeated runs reuse the same filenames.
 
 `processed_image_manifest.csv` records each saved file's original source and
 split; `processed_image_skipped.csv` lists skipped people. People with fewer than
 three originals need more independent captures before expansion. The current
-input produces twelve images each for Maurice and Larissa; Kudakwashe is skipped.
+input produces twenty-one images each for Maurice and Larissa; Kudakwashe is skipped.
 These exported images are not loaded back into training. Validation/test
 variants retain their original partitions and are not independent test samples.
+
+## Additional filter variants
+
+CLAHE (LAB lightness, clip limit 2.0, tile grid 8×8), gamma correction
+(`255 * (input / 255) ** 0.8`) and 3×3 median blur are now included in
+`image_variants`. Training uses twelve variants per training original; exported
+image folders use seven variants per selected original, giving twenty-one saved
+images per eligible person. Validation and test still use original images only.
+The updated suite contains thirteen passing tests. Additional filtered images
+do not increase the number of independent captures or guarantee improvement.

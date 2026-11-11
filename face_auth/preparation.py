@@ -1,4 +1,4 @@
-"""Save an inspectable 3-original to 12-image dataset with source provenance."""
+"""Save an inspectable 3-original to 21-image dataset with source provenance."""
 from pathlib import Path
 import re
 
@@ -7,7 +7,8 @@ import pandas as pd
 from .embeddings import read_rgb
 from .pipeline import UNKNOWN_FOLDERS, image_variants
 
-EXPORT_VARIANTS = ('original', 'rotation_plus_8', 'horizontal_flip', 'grayscale')
+EXPORT_VARIANTS = ('original', 'rotation_plus_8', 'horizontal_flip', 'grayscale',
+                   'clahe', 'gamma_080', 'median_blur_3')
 
 
 def safe_name(value):
@@ -16,7 +17,7 @@ def safe_name(value):
 
 
 def export_processed_images(source_manifest, output_dir):
-    """Save three originals plus nine derivatives per eligible person.
+    """Save three originals plus eighteen derivatives per eligible person.
 
     Use the first three valid originals in filename order. Identities with fewer
     originals and explicit unknown folders are skipped. Every output retains its

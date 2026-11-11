@@ -74,7 +74,17 @@ def split_sources(frame, seed=42):
 
 def image_variants(rgb):
     """Deterministic mild augmentation and filters for inspection/training."""
+    import cv2
+
+    rgb = np.asarray(rgb, dtype=np.uint8)
     image = Image.fromarray(rgb)
+    # CLAHE affects LAB lightness only, retaining the original chromatic channels.
+    lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2LAB)
+    lab[:, :, 0] = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(lab[:, :, 0])
+    clahe_rgb = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
+    # Explicit convention: output = 255 * (input / 255) ** gamma.
+    # Gamma 0.8 brightens midtones; one deterministic setting is one new variant.
+    gamma_lut = np.clip(np.round(255 * (np.arange(256) / 255.) ** .8), 0, 255).astype(np.uint8)
     return {
         'original': image,
         'rotation_plus_8': image.rotate(8, resample=Image.Resampling.BICUBIC),
@@ -85,6 +95,9 @@ def image_variants(rgb):
         'contrast_110': ImageEnhance.Contrast(image).enhance(1.1),
         'gaussian_blur': image.filter(ImageFilter.GaussianBlur(.6)),
         'sharpen': image.filter(ImageFilter.UnsharpMask(radius=1, percent=120, threshold=3)),
+        'clahe': Image.fromarray(clahe_rgb),
+        'gamma_080': Image.fromarray(cv2.LUT(rgb, gamma_lut)),
+        'median_blur_3': Image.fromarray(cv2.medianBlur(rgb, 3)),
     }
 
 
