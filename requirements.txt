@@ -10,3 +10,4 @@ soundfile>=0.12,<1
 jupyterlab>=4,<5
 ipykernel>=6,<8
 pytest>=8,<10
+opencv-python-headless>=4.8,<5

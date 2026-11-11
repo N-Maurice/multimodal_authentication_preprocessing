@@ -3,9 +3,10 @@
 Formative 2 team project: verify a face, verify the same person's voice, then
 predict a product category from that customer's tabular features.
 
-This repository contains the agreed structure, starter notebooks and a CLI
-scaffold. Models, feature extraction, evaluation results and the final PDF still
-need to be developed. No trained artifacts or measured results are included.
+This repository contains the agreed structure, a complete face workflow, starter
+product/voice/integration notebooks and a multimodal CLI scaffold. Run the face
+notebook to generate its model and evaluation outputs. Product/voice training
+and the final report remain to be completed.
 
 ## Team ownership
 
@@ -27,9 +28,9 @@ python -m pip install -r requirements.txt
 jupyter lab
 ```
 
-Pretrained face/speaker encoders are not selected yet. Maurice and Kudakwashe
-must agree on suitable encoders, add their dependencies and document model
-licenses/downloads before implementing the shared extractors.
+The face workflow uses pretrained OpenCV YuNet and SFace encoders. Their weights
+are downloaded explicitly by the notebook. The speaker encoder and shared voice
+extractor still need implementation.
 
 ## Repository layout
 
@@ -118,7 +119,8 @@ python -m pytest -q
 ```
 
 The example paths illustrate invocation; use held-out samples for evaluation.
-The CLI currently reports a setup error until extractors and artifacts exist.
+The full multimodal CLI reports a setup error until all three models, the voice
+extractor and registry mappings exist. Face-only inference has its own CLI below.
 Exit codes: `0` success, `1` authentication denied, `2` missing/invalid setup.
 This is a classroom simulation without liveness or replay protection. Classifier
 confidence alone does not establish biometric security. Only load trusted joblib
@@ -126,3 +128,20 @@ artifacts. Obtain participant consent before committing or publishing biometrics
 
 Complete the report, contributions, repository link and demonstration video link
 before submission.
+
+## Complete face authentication workflow (`feature/face`)
+
+Maurice's face notebook now includes executable image analysis, filters,
+source-level splits, training-only augmentation, pretrained YuNet/SFace features,
+validation-based classifier selection and rejection calibration, final held-out
+known/unknown testing, and model export with reload checks. See
+[the face setup guide](docs/face_recognition.md) for Anaconda, Colab, Kaggle,
+artifact locations and face-only CLI instructions. Use `environment-face.yml`
+or `requirements/face.txt` for this workflow. The voice and product notebooks
+remain starter notebooks; the full multimodal application still needs their
+trained artifacts and registry mappings.
+
+The face notebook has been executed locally: the saved model is
+`models/face_model.joblib`, and its executed copy and evaluation are in
+`reports/face/`. Generated biometric outputs and downloaded weights stay local
+and are ignored by Git; rerun the notebook to recreate them in another environment.

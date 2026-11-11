@@ -7,3 +7,9 @@ venv/
 .env
 # Biometric samples require each participant's consent before sharing.
 # Review data/raw before committing; do not publish without consent.
+# Downloadable weights and generated biometric artifacts stay local.
+models/pretrained/
+models/face_model.joblib
+data/processed/image_features.csv
+data/processed/face_manifest.csv
+reports/face/
