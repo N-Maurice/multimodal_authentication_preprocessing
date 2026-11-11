@@ -14,7 +14,7 @@ training, evaluation and export, rather than supplying placeholder metrics.
 | `face_auth/embeddings.py` | YuNet detection, alignment, pretrained SFace features and explicit weight downloads |
 | `face_auth/pipeline.py` | Data audit, safe splits, training augmentation, classifier and rejection calibration |
 | `face_auth/__main__.py` | Face-only inference CLI |
-| `feature_extraction.py` | Shared face extractor for full system integration |
+| `feature_extraction.py` | Reusable face extractor for training/inference parity |
 | `requirements/face.txt` | Face-only pip environment |
 | `environment-face.yml` | Anaconda environment |
 | `tests/test_face_pipeline.py` | Data isolation, duplicate detection, rejection and serialization tests |
@@ -88,7 +88,7 @@ contain participant images: clear outputs before sharing publicly if consent
 has not been granted. Model hashes and dependency versions support reproduction;
 use the same saved ONNX files because upstream URLs can change.
 
-## Inference and integration
+## Face inference
 
 After notebook export, from the repository root:
 
@@ -108,10 +108,8 @@ predicted identity's cosine gate and classifier confidence gate.
 `FaceAuthenticator.predict_proba` returns zero scores for rejected faces; those
 rows intentionally do not sum to one. The full CLI rejects them through its
 positive confidence threshold. Use `classifier_` probabilities for log loss.
-The notebook preserves product/voice metadata and global `status`; it does not
-mark the whole application trained. Voice implementation and registry mapping
-are still required. Set `FACE_WEIGHTS_DIR` when relocating the shared extractor.
-The face-only CLI does not approve a transaction.
+The notebook writes face-only metadata on this branch. Set `FACE_WEIGHTS_DIR`
+when relocating the reusable extractor. The CLI reports face verification only.
 
 Only load trusted joblib files. This classroom workflow has no liveness or
 replay defense. SFace/YuNet sources, methodology and upstream license links are
@@ -132,7 +130,8 @@ rejected. These counts are too small for a reliable performance estimate.
 The executed notebook is saved locally at
 `reports/face/02_face_recognition.executed.ipynb`; the version-controlled notebook
 has clean outputs to avoid embedding participant photographs in its history.
-Seventeen automated tests passed, face-only CLI success/denial exit codes were
+The initial full-project run passed seventeen automated tests. After narrowing
+this branch, the face-specific suite contains ten tests. Face-only CLI success/denial exit codes were
 checked, and a second offline notebook run passed with separate project,
 working, weight and output directories. Actual hosted Colab/Kaggle sessions have
 not been run here; their configuration and writable-path behavior are supported

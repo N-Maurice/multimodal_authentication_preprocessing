@@ -1,147 +1,90 @@
-# Multimodal authentication and product recommendation
+# Face recognition and authentication
 
-Formative 2 team project: verify a face, verify the same person's voice, then
-predict a product category from that customer's tabular features.
+Maurice's workspace for the Formative 2 face-recognition component, on branch
+`feature/face`. It includes image analysis, filters, training-only augmentation,
+pretrained YuNet/SFace features, classifier training, validation, held-out testing
+and model export.
 
-This repository contains the agreed structure, a complete face workflow, starter
-product/voice/integration notebooks and a multimodal CLI scaffold. Run the face
-notebook to generate its model and evaluation outputs. Product/voice training
-and the final report remain to be completed.
+Start with [02_face_recognition.ipynb](notebooks/02_face_recognition.ipynb).
+See the [setup and workflow guide](docs/face_recognition.md) for local Anaconda,
+Google Colab and Kaggle configuration.
 
-## Team ownership
-
-| Member | Notebook | Responsibilities | Saved output |
-|---|---|---|---|
-| Patrick | 01_product_recommendation.ipynb | Merge, engineer features, train and evaluate product prediction | product_model.joblib |
-| Maurice | 02_face_recognition.ipynb | Image collection, augmentation, pretrained features, identity classification and rejection | face_model.joblib |
-| Kudakwashe | 03_voice_verification.ipynb | Audio collection, augmentation, speaker features and verification | voice_model.joblib |
-| Larissa | 04_system_integration.ipynb and main.py | Registry, authentication sequence, integration tests, CLI and video | Working application |
-
-## Setup
-
-Use Python 3.11 or 3.12 in a virtual environment:
+## Setup with Anaconda
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
+conda env create -f environment-face.yml
+conda activate multimodal-face
+python -m ipykernel install --user --name multimodal-face --display-name "Python (multimodal-face)"
 jupyter lab
 ```
 
-The face workflow uses pretrained OpenCV YuNet and SFace encoders. Their weights
-are downloaded explicitly by the notebook. The speaker encoder and shared voice
-extractor still need implementation.
+Select the `Python (multimodal-face)` kernel. For an existing environment:
 
-## Repository layout
+```bash
+python -m pip install -r requirements.txt
+```
+
+## Workspace
 
 ```text
 .
 ├── README.md
-├── requirements.txt
-├── .gitignore
+├── requirements.txt                 # Includes requirements/face.txt
+├── requirements/face.txt
+├── environment-face.yml
+├── docs/face_recognition.md
+├── notebooks/02_face_recognition.ipynb
+├── face_auth/
+│   ├── __init__.py
+│   ├── embeddings.py                # Detection, alignment, pretrained features
+│   ├── pipeline.py                  # Splits, augmentation, training, rejection
+│   └── __main__.py                  # Face authentication CLI
+├── feature_extraction.py            # Reusable face extractor
 ├── data/
-│   ├── raw/
-│   │   ├── customer_social_profiles - customer_social_profiles.csv
-│   │   ├── customer_transactions - customer_transactions.csv
-│   │   ├── images/<user_id>/
-│   │   └── audio/<user_id>/
-│   └── processed/
-│       └── user_registry.csv
-├── notebooks/
-│   ├── 01_product_recommendation.ipynb
-│   ├── 02_face_recognition.ipynb
-│   ├── 03_voice_verification.ipynb
-│   └── 04_system_integration.ipynb
-├── models/model_metadata.json
-├── feature_extraction.py
-├── main.py
-├── reports/
-│   ├── final_report.md
-│   └── contributions.md
-└── tests/test_system.py
+│   ├── raw/images/<user_id>/
+│   └── processed/                   # Generated manifest and image features
+├── models/                          # Metadata, saved classifier and weights
+├── reports/face/                    # Generated plots, metrics and executed notebook
+└── tests/test_face_pipeline.py
 ```
 
-The existing raw filenames are preserved. Training must generate
-`data/processed/merged_dataset.csv`, `image_features.csv`, `audio_features.csv`
-and `customer_inference.csv`, plus all three `.joblib` models. Export the finished
-report as `reports/final_report.pdf`. These outputs are deliberately not empty
-placeholder files that could be mistaken for completed work.
+All members' facial photographs remain because they are inputs to your identity
+classifier and unknown-person tests. Currently Maurice and Larissa each have
+three images; Kudakwashe has one and is withheld as an unknown identity.
+Enroll an identity only after collecting at least three independent valid images.
+Use `data/raw/images/unauthorized/` for additional unknown-person samples.
 
-## Data currently available
+## Training and evaluation
 
-The social CSV has 155 rows and the transaction CSV has 150 rows. Their key names
-differ (`customer_id_new` and `customer_id_legacy`); Patrick must validate the
-mapping before merging.
+Run the notebook from top to bottom. It audits image quality and duplicates,
+freezes source-level train/validation/test partitions, augments training crops,
+extracts 128-dimensional embeddings, compares classifiers on validation, selects
+a rejection threshold, evaluates held-out originals, and saves the model.
 
-At initial inventory, Maurice and Larissa each have three facial images;
-Kudakwashe has one, and Patrick has none. Maurice and Larissa each have two audio
-recordings; Kudakwashe and Patrick have none. Add the missing samples and separate
-unauthorized attempts. More independent captures are needed for credible held-out
-evaluation. OGG decoding may require a compatible system audio decoder.
+The initial run identified two known test images correctly and rejected one
+unknown image. That sample count is too small for reliable performance claims.
+Collect more independent sessions and unknown people for stronger evaluation.
 
-## Shared integration contracts
+Generated outputs:
 
-- Use the same lowercase `user_id` across biometric folders, model class labels,
-  feature CSVs and the registry. Registry columns are `user_id,display_name,customer_id`.
-  Assign real tabular customer IDs explicitly for this classroom simulation.
-- Each biometric artifact is a fitted estimator or Pipeline with `classes_` and
-  `predict_proba`. Shared extractors in `feature_extraction.py` return a single
-  two-dimensional feature row and must be identical in training and inference.
-- Feature CSVs retain `user_id,source_id,split,augmentation` alongside numeric
-  features. Never feed identity labels or provenance columns into the classifier.
-- Product output is a fitted preprocessing/classifier Pipeline. Record its input
-  columns in `models/model_metadata.json`. `customer_inference.csv` contains
-  exactly one pre-purchase feature row per `customer_id` and no target column.
-- Save calibrated face/voice thresholds and encoder details in metadata. Set
-  `status` to `trained` after completing and validating the artifacts.
-- Both identities must be enrolled and match. A voice belonging to another
-  enrolled person must fail. Prediction runs only after both checkpoints pass.
+- `data/processed/face_manifest.csv`
+- `data/processed/image_features.csv`
+- `models/face_model.joblib`
+- `models/model_metadata.json`
+- `models/pretrained/` containing the two ONNX weights
+- `reports/face/` containing audits, plots, metrics, test attempts and the executed notebook
 
-Do not merge face/audio sample rows directly into transaction rows: their
-one-to-many relationships can multiply observations and leak identity. Link
-modalities through the registry for the sequential system; if experimenting with
-a fused model, aggregate features per user within training splits first.
+The trained model and generated biometric outputs are available locally and
+ignored by Git. Rerun the notebook to recreate them in another environment.
 
-## Evaluation and demonstration
-
-Split original captures before augmentation; keep each original and all its
-variants in one partition. Use validation data to select thresholds, then report
-held-out accuracy, macro F1 and log loss, plus false acceptance/rejection rates
-and unknown-person tests. With very few original samples, report limitations
-explicitly. Keep recommendation splits grouped by customer or time as appropriate.
-
-After completing all notebooks and extractors:
+## Authenticate a face
 
 ```bash
-python main.py --face data/raw/images/maurice/Maurice_Neutral.jpeg \
-  --voice data/raw/audio/maurice/Maurice_Approved.ogg
+python -m face_auth --image /path/to/new-photo.jpg
 python -m pytest -q
 ```
 
-The example paths illustrate invocation; use held-out samples for evaluation.
-The full multimodal CLI reports a setup error until all three models, the voice
-extractor and registry mappings exist. Face-only inference has its own CLI below.
-Exit codes: `0` success, `1` authentication denied, `2` missing/invalid setup.
-This is a classroom simulation without liveness or replay protection. Classifier
-confidence alone does not establish biometric security. Only load trusted joblib
-artifacts. Obtain participant consent before committing or publishing biometrics.
-
-Complete the report, contributions, repository link and demonstration video link
-before submission.
-
-## Complete face authentication workflow (`feature/face`)
-
-Maurice's face notebook now includes executable image analysis, filters,
-source-level splits, training-only augmentation, pretrained YuNet/SFace features,
-validation-based classifier selection and rejection calibration, final held-out
-known/unknown testing, and model export with reload checks. See
-[the face setup guide](docs/face_recognition.md) for Anaconda, Colab, Kaggle,
-artifact locations and face-only CLI instructions. Use `environment-face.yml`
-or `requirements/face.txt` for this workflow. The voice and product notebooks
-remain starter notebooks; the full multimodal application still needs their
-trained artifacts and registry mappings.
-
-The face notebook has been executed locally: the saved model is
-`models/face_model.joblib`, and its executed copy and evaluation are in
-`reports/face/`. Generated biometric outputs and downloaded weights stay local
-and are ignored by Git; rerun the notebook to recreate them in another environment.
+Exit codes: `0` verified, `1` denied, `2` setup error. Missing, multiple, small or
+unverified faces are denied. Only load trusted model files. This classroom
+workflow has no liveness or replay defense. Obtain participant consent before
+sharing photographs, embeddings, models or executed notebook outputs.
