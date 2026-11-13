@@ -3,9 +3,10 @@
 Formative 2 team project: verify a face, verify the same person's voice, then
 predict a product category from that customer's tabular features.
 
-This repository contains the agreed structure, starter notebooks and a CLI
-scaffold. Models, feature extraction, evaluation results and the final PDF still
-need to be developed. No trained artifacts or measured results are included.
+This repository contains the agreed structure, notebooks and a CLI scaffold.
+The voice feature and training pipeline is implemented; its artifacts require
+running the notebook. The face/product models, full integration, and final PDF
+remain to be completed.
 
 ## Team ownership
 
@@ -40,9 +41,12 @@ python -m pip install -r requirements.txt
 jupyter lab
 ```
 
-Pretrained face/speaker encoders are not selected yet. Maurice and Kudakwashe
-must agree on suitable encoders, add their dependencies and document model
-licenses/downloads before implementing the shared extractors.
+Kudakwashe's voice extractor uses SpeechBrain's pretrained
+`speechbrain/spkrec-ecapa-voxceleb` ECAPA-TDNN speaker encoder (Apache-2.0),
+with mono 16 kHz input. The checkpoint is downloaded to the user's cache and
+is not committed to the repository. Coordinate the shared runtime setup with
+Maurice before integration; the face encoder remains to be selected and
+documented by its owner.
 
 ## Repository layout
 
@@ -66,11 +70,14 @@ licenses/downloads before implementing the shared extractors.
 │   └── 04_system_integration.ipynb
 ├── models/model_metadata.json
 ├── feature_extraction.py
+├── voice_model.py
 ├── main.py
 ├── reports/
 │   ├── final_report.md
 │   └── contributions.md
-└── tests/test_system.py
+└── tests/
+    ├── test_system.py
+    └── test_voice_model.py
 ```
 
 The existing raw filenames are preserved. Training must generate
@@ -85,11 +92,13 @@ The social CSV has 155 rows and the transaction CSV has 150 rows. Their key name
 differ (`customer_id_new` and `customer_id_legacy`); Patrick must validate the
 mapping before merging.
 
-At initial inventory, Maurice and Larissa each have three facial images;
-Kudakwashe has one, and Patrick has none. Maurice and Larissa each have two audio
-recordings; Kudakwashe and Patrick have none. Add the missing samples and separate
-unauthorized attempts. More independent captures are needed for credible held-out
-evaluation. OGG decoding may require a compatible system audio decoder.
+Maurice and Larissa each have three facial images; Kudakwashe has one, and Patrick
+has none. Maurice, Larissa, Kudakwashe, and Patrick each have two original audio
+recordings. Patrick's MP4 files contain audio tracks; the loader decodes the audio
+and ignores video. Add any remaining samples and separate unauthorized attempts.
+Two recordings per speaker support only a provisional train/validation split;
+more independent captures are needed for a separate test set. The current WhatsApp
+OGG files use Opus and require an audio decoder that supports that codec.
 
 ## Shared integration contracts
 
@@ -99,8 +108,9 @@ evaluation. OGG decoding may require a compatible system audio decoder.
 - Each biometric artifact is a fitted estimator or Pipeline with `classes_` and
   `predict_proba`. Shared extractors in `feature_extraction.py` return a single
   two-dimensional feature row and must be identical in training and inference.
-- Feature CSVs retain `user_id,source_id,split,augmentation` alongside numeric
-  features. Never feed identity labels or provenance columns into the classifier.
+- Feature CSVs retain `user_id,source_id,split,augmentation` and JSON-encoded
+  `augmentation_parameters` alongside numeric features. Never feed identity labels
+  or provenance columns into the classifier.
 - Product output is a fitted preprocessing/classifier Pipeline. Record its input
   columns in `models/model_metadata.json`. `customer_inference.csv` contains
   exactly one pre-purchase feature row per `customer_id` and no target column.
