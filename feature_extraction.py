@@ -49,3 +49,12 @@ def extract_face_features(path, weights_dir=None):
     if features.shape != (1, EMBEDDING_SIZE):
         raise ValueError(f"Expected one row of {EMBEDDING_SIZE} features, got {features.shape}")
     return features
+
+
+def extract_voice_features(path):
+    """Kudakwashe: return one 2-D row using the training audio extractor.
+
+    Document resampling, mono conversion, silence handling and feature order.
+    Use pretrained speaker embeddings for verification, with MFCCs for analysis.
+    """
+    raise NotImplementedError("Kudakwashe must implement the shared voice extractor")
