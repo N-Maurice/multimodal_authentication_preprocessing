@@ -286,8 +286,11 @@ def train_voice_model(feature_table, model_path, features_path, metadata_path):
         model.classes_,
         threshold,
     )
+    training_speakers = set(training["user_id"])
+    test_speakers = set(test["user_id"])
+    missing_test_speakers = sorted(training_speakers - test_speakers)
     test_metrics = None
-    if not test.empty:
+    if not missing_test_speakers:
         test_probabilities = model.predict_proba(
             test[embedding_columns].to_numpy(dtype=np.float32)
         )
@@ -312,9 +315,9 @@ def train_voice_model(feature_table, model_path, features_path, metadata_path):
         "owner": "Kudakwashe",
         "threshold": threshold,
         "threshold_status": (
-            "validation_calibrated_with_independent_test"
+            "validation_calibrated_with_complete_independent_test"
             if test_metrics is not None
-            else "provisional_validation_only_no_independent_test"
+            else "provisional_validation_only_no_complete_test"
         ),
         "feature_columns": embedding_columns,
         "pretrained_model": VOICE_ENCODER_SOURCE,
@@ -327,6 +330,10 @@ def train_voice_model(feature_table, model_path, features_path, metadata_path):
         "source_counts_by_split": {
             split: int(rows["source_id"].nunique())
             for split, rows in feature_table.groupby("split")
+        },
+        "test_coverage": {
+            "speakers_with_test_recordings": sorted(test_speakers),
+            "speakers_missing_test_recordings": missing_test_speakers,
         },
         "validation_calibration": calibration,
         "validation_metrics": validation_metrics,

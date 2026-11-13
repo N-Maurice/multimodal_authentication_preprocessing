@@ -81,6 +81,9 @@ class VoiceModelTests(unittest.TestCase):
             {"user_id": "maurice", "source_id": "maurice/2",
              "split": "validation", "augmentation": "original",
              "speaker_embedding_000": 0.2, "speaker_embedding_001": 0.8},
+            {"user_id": "kudakwashe", "source_id": "kudakwashe/3",
+             "split": "test", "augmentation": "original",
+             "speaker_embedding_000": 0.7, "speaker_embedding_001": 0.3},
         ])
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
@@ -103,6 +106,15 @@ class VoiceModelTests(unittest.TestCase):
             self.assertEqual(metadata["status"], "not_trained")
             self.assertEqual(metadata["voice"]["feature_columns"], result["feature_columns"])
             self.assertIsNotNone(metadata["voice"]["threshold"])
+            self.assertIsNone(result["test_metrics"])
+            self.assertEqual(
+                metadata["voice"]["threshold_status"],
+                "provisional_validation_only_no_complete_test",
+            )
+            self.assertEqual(
+                metadata["voice"]["test_coverage"]["speakers_missing_test_recordings"],
+                ["maurice"],
+            )
             self.assertTrue((root / "audio_features.csv").exists())
 
 

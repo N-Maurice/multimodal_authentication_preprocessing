@@ -96,7 +96,9 @@ def extract_voice_features_from_audio(audio, sample_rate=VOICE_SAMPLE_RATE):
     if waveform.size == 0 or float(np.max(np.abs(waveform))) <= 1e-8:
         raise ValueError("Audio contains no speech after silence trimming")
 
-    signal = torch.from_numpy(np.ascontiguousarray(waveform)).unsqueeze(0)
+    signal = torch.from_numpy(
+        np.array(waveform, dtype=np.float32, order="C", copy=True)
+    ).unsqueeze(0)
     with torch.inference_mode():
         embedding = _load_voice_encoder().encode_batch(signal)
     embedding = embedding.detach().cpu().numpy().reshape(1, -1).astype(np.float32)
