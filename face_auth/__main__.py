@@ -1,22 +1,27 @@
 """Face-only demonstration: python -m face_auth --image photo.jpg."""
 import argparse
 import os
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
     import joblib
-    from .embeddings import FaceEncoder, FaceInputError
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from face_auth.embeddings import FaceInputError
+    from feature_extraction import extract_face_features
 
-    root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--image', type=Path, required=True)
-    parser.add_argument('--model', type=Path, default=root / 'models/face_model.joblib')
-    parser.add_argument('--weights', type=Path, default=Path(os.environ.get('FACE_WEIGHTS_DIR', root / 'models/pretrained')))
+    parser.add_argument('--model', type=Path, default=ROOT / 'models/face_model.joblib')
+    parser.add_argument('--weights', type=Path, default=Path(os.environ.get('FACE_WEIGHTS_DIR', ROOT / 'models/pretrained')))
     args = parser.parse_args()
     try:
         model = joblib.load(args.model)
-        features = FaceEncoder(args.weights).extract(args.image)
+        features = extract_face_features(args.image, weights_dir=args.weights)
         identity = model.predict(features)[0]
         if identity == 'unknown':
             parser.exit(1, 'Access denied: face was not verified\n')
