@@ -1,12 +1,15 @@
 import json
 import tempfile
 import unittest
+import zlib
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
 
 from voice_model import (
+    build_feature_table,
     calibrate_threshold,
     discover_recordings,
     split_original_recordings,
@@ -27,6 +30,36 @@ class VoiceModelTests(unittest.TestCase):
 
         self.assertEqual(len(recordings), 1)
         self.assertEqual(recordings[0]["path"], recording_path)
+
+    def test_feature_table_records_augmentation_parameters(self):
+        audio = np.sin(np.linspace(0, 20 * np.pi, 16_000)).astype(np.float32)
+        recording = {
+            "user_id": "kudakwashe",
+            "source_id": "kudakwashe/sample",
+            "path": Path("sample.ogg"),
+            "split": "train",
+        }
+        with patch("voice_model.load_voice_audio", return_value=(audio, 16_000)):
+            features = build_feature_table(
+                [recording],
+                feature_extractor=lambda waveform, sample_rate: np.array([[1.0, 0.0]]),
+            )
+
+        parameters = {
+            row["augmentation"]: json.loads(row["augmentation_parameters"])
+            for _, row in features.iterrows()
+        }
+        self.assertEqual(parameters["original"], {})
+        self.assertEqual(parameters["pitch_shift_plus_1_semitone"]["n_steps"], 1.0)
+        noise = parameters["low_level_noise"]
+        self.assertEqual(noise["distribution"], "normal")
+        self.assertEqual(noise["clip_range"], [-1.0, 1.0])
+        expected_std_dev = max(float(np.sqrt(np.mean(np.square(audio)))) * 0.02, 0.0001)
+        self.assertAlmostEqual(noise["std_dev"], expected_std_dev)
+        self.assertEqual(
+            noise["seed"],
+            zlib.crc32(recording["source_id"].encode("utf-8")),
+        )
 
     def test_split_keeps_each_original_in_one_partition(self):
         recordings = [

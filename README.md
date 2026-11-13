@@ -95,8 +95,9 @@ OGG files use Opus and require an audio decoder that supports that codec.
 - Each biometric artifact is a fitted estimator or Pipeline with `classes_` and
   `predict_proba`. Shared extractors in `feature_extraction.py` return a single
   two-dimensional feature row and must be identical in training and inference.
-- Feature CSVs retain `user_id,source_id,split,augmentation` alongside numeric
-  features. Never feed identity labels or provenance columns into the classifier.
+- Feature CSVs retain `user_id,source_id,split,augmentation` and JSON-encoded
+  `augmentation_parameters` alongside numeric features. Never feed identity labels
+  or provenance columns into the classifier.
 - Product output is a fitted preprocessing/classifier Pipeline. Record its input
   columns in `models/model_metadata.json`. `customer_inference.csv` contains
   exactly one pre-purchase feature row per `customer_id` and no target column.

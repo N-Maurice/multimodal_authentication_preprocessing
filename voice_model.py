@@ -89,13 +89,33 @@ def augment_audio(audio, sample_rate, seed):
         sr=sample_rate,
         n_steps=1.0,
     )
-    rms = float(np.sqrt(np.mean(np.square(audio))))
-    noise_scale = max(rms * 0.02, 0.0001)
+    noise_scale = _noise_standard_deviation(audio)
     noisy = audio + rng.normal(0.0, noise_scale, size=audio.shape)
     return [
         ("pitch_shift_plus_1_semitone", pitch_shifted.astype(np.float32)),
         ("low_level_noise", np.clip(noisy, -1.0, 1.0).astype(np.float32)),
     ]
+
+
+def _noise_standard_deviation(audio):
+    rms = float(np.sqrt(np.mean(np.square(audio))))
+    return max(rms * 0.02, 0.0001)
+
+
+def _augmentation_parameters(augmentation, sample_rate, noise_scale, seed):
+    if augmentation == "original":
+        return {}
+    if augmentation == "pitch_shift_plus_1_semitone":
+        return {"n_steps": 1.0, "sample_rate_hz": sample_rate}
+    if augmentation == "low_level_noise":
+        return {
+            "distribution": "normal",
+            "mean": 0.0,
+            "std_dev": noise_scale,
+            "clip_range": [-1.0, 1.0],
+            "seed": seed,
+        }
+    raise ValueError(f"Unknown audio augmentation: {augmentation}")
 
 
 def analyze_audio(audio, sample_rate=VOICE_SAMPLE_RATE):
@@ -123,11 +143,13 @@ def build_feature_table(recordings, feature_extractor=extract_voice_features_fro
     rows = []
     for recording in recordings:
         audio, sample_rate = load_voice_audio(recording["path"])
+        seed = zlib.crc32(recording["source_id"].encode("utf-8"))
         variants = [("original", audio)] + augment_audio(
             audio,
             sample_rate,
-            seed=zlib.crc32(recording["source_id"].encode("utf-8")),
+            seed=seed,
         )
+        noise_scale = _noise_standard_deviation(audio)
         for augmentation, waveform in variants:
             embedding = feature_extractor(waveform, sample_rate).reshape(-1)
             row = {
@@ -135,6 +157,15 @@ def build_feature_table(recordings, feature_extractor=extract_voice_features_fro
                 "source_id": recording["source_id"],
                 "split": recording["split"],
                 "augmentation": augmentation,
+                "augmentation_parameters": json.dumps(
+                    _augmentation_parameters(
+                        augmentation,
+                        sample_rate,
+                        noise_scale,
+                        seed,
+                    ),
+                    sort_keys=True,
+                ),
             }
             row.update(analyze_audio(waveform, sample_rate))
             row.update({
