@@ -47,29 +47,35 @@ python -m pip install -r requirements.txt
 └── tests/test_face_pipeline.py
 ```
 
-All members' facial photographs remain because they are inputs to your identity
-classifier and unknown-person tests. Currently Maurice and Larissa each have
-three images; Kudakwashe has one and is withheld as an unknown identity.
-Enroll an identity only after collecting at least three independent valid images.
-Use `data/raw/images/unauthorized/` for additional unknown-person samples.
+Four members are enrolled, each with three photographs (neutral, smiling,
+surprised): Kudakwashe, Larissa, Maurice and Patrick. A person is enrolled only
+with at least three independent valid photographs; anyone with fewer is used as
+an unknown person in testing. `data/raw/images/unauthorized/` holds 14 photos of
+non-members that must be rejected.
 
 ## Training and evaluation
 
-Run the notebook from top to bottom. It audits image quality and duplicates,
-freezes source-level train/validation/test partitions, augments training crops,
-extracts 128-dimensional embeddings, compares classifiers on validation, selects
-a rejection threshold, evaluates held-out originals, and saves the model.
+Run the notebook from top to bottom, locally, on Google Colab or on Kaggle. It
+works from the project folder, so every saved path is relative. Photos are resized
+to at most 1024 px, the original photos are split (neutral → train, smiling →
+validation, surprised → test) **before** augmentation, and each photo then gets 12
+augmented copies that stay in its split. Faces are encoded with the pretrained
+SFace 2021dec model (128 values) through `extract_face_features()` in
+`feature_extraction.py`, which the command-line tool also calls.
 
-The initial run identified two known test images correctly and rejected one
-unknown image. That sample count is too small for reliable performance claims.
-Collect more independent sessions and unknown people for stronger evaluation.
+Latest run: validation and test accuracy 100 % (test log loss 0.068 vs 1.386 for a
+dummy baseline); rejection threshold 0.417; all 14 unauthorized photos (and their
+168 augmented copies) denied; 0 of 12 stranger attempts accepted when leaving one
+member out; all 21 command-line checks passed. The counts are small, so treat them
+as evidence the method works rather than a precise error rate.
 
 Generated outputs:
 
+- `data/processed/resized_images/` (photos resized to ≤ 1024 px)
 - `data/processed/face_manifest.csv`
-- `data/processed/image_features.csv`
+- `data/processed/image_features.csv` (`user_id`, `source_id`, `split`, `augmentation` + 128 features)
 - `models/face_model.joblib`
-- `models/model_metadata.json`
+- `models/model_metadata.json` (`face.threshold`, `face.pretrained_model`, `face.feature_columns`)
 - `models/pretrained/` containing the two ONNX weights
 - `reports/face/` containing audits, plots, metrics, test attempts and the executed notebook
 
@@ -88,7 +94,7 @@ unverified faces are denied. Only load trusted model files. This classroom
 workflow has no liveness or replay defense. Obtain participant consent before
 sharing photographs, embeddings, models or executed notebook outputs.
 
-Notebook section **5.1** saves **21 processed PNGs per eligible person** from
+Notebook section **5.3** saves **21 processed PNGs per enrolled person** from
 three originals (original, rotation, flip, grayscale, CLAHE, gamma and median blur per source). Files appear
 in `data/processed/images/<user_id>/` when the cell runs, with descriptive names
 and a provenance CSV. People with fewer than three originals are listed as
