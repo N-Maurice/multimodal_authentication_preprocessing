@@ -16,3 +16,5 @@ reports/face/
 data/processed/images/
 data/processed/processed_image_manifest.csv
 data/processed/processed_image_skipped.csv
+data/processed/resized_images/
+data/processed/resized_images.csv
