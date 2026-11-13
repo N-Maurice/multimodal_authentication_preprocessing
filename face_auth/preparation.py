@@ -1,14 +1,51 @@
-"""Save an inspectable 3-original to 21-image dataset with source provenance."""
+"""Resize raw photographs and save an inspectable 21-image dataset per person."""
 from pathlib import Path
 import re
 
 import pandas as pd
+from PIL import Image
 
 from .embeddings import read_rgb
-from .pipeline import UNKNOWN_FOLDERS, image_variants
+from .pipeline import IMAGE_EXTENSIONS, UNKNOWN_FOLDERS, image_variants
 
 EXPORT_VARIANTS = ('original', 'rotation_plus_8', 'horizontal_flip', 'grayscale',
                    'clahe', 'gamma_080', 'median_blur_3')
+
+
+def resize_photos(source_dir, output_dir, max_side=1024, quality=95):
+    """Write a copy of every photo whose longest side is at most ``max_side`` pixels.
+
+    Phone rotation (EXIF) is applied first, the aspect ratio is kept, and photos
+    that are already small enough are copied unchanged in size. The raw folder is
+    never modified. Output: ``output_dir/<user_id>/<original stem>.jpg``. Unexpected
+    files already in ``output_dir`` raise an error instead of being deleted.
+    """
+    source_dir, output_dir = Path(source_dir), Path(output_dir)
+    rows, planned = [], set()
+    for path in sorted(source_dir.rglob('*')):
+        if path.suffix.lower() not in IMAGE_EXTENSIONS or not path.is_file():
+            continue
+        relative = path.relative_to(source_dir)
+        if len(relative.parts) != 2:
+            raise ValueError(f'Use images/<user_id>/<filename>: {path}')
+        target = output_dir / relative.parts[0] / (path.stem + '.jpg')
+        if target in planned:
+            raise ValueError(f'Two source files map to {target}; rename one of them')
+        planned.add(target)
+        image = Image.fromarray(read_rgb(path))
+        original_size = image.size
+        if max(original_size) > max_side:
+            image.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        image.save(target, format='JPEG', quality=quality)
+        rows.append(dict(user_id=relative.parts[0].lower(), raw_path=str(path), resized_path=str(target),
+                         original_width=original_size[0], original_height=original_size[1],
+                         width=image.size[0], height=image.size[1],
+                         resized=max(original_size) > max_side))
+    extra = sorted(str(p) for p in output_dir.rglob('*') if p.is_file() and p not in planned)
+    if extra:
+        raise ValueError(f'Remove stale files from {output_dir} (sources were renamed or deleted): {extra}')
+    return pd.DataFrame(rows)
 
 
 def safe_name(value):

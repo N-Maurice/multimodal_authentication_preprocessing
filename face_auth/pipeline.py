@@ -72,6 +72,61 @@ def split_sources(frame, seed=42):
     return frame
 
 
+EXPRESSIONS = ('neutral', 'smiling', 'surprised')
+DEFAULT_EXPRESSION_SPLIT = {'neutral': 'train', 'smiling': 'validation', 'surprised': 'test'}
+
+
+def expression_from_filename(path):
+    """Read the expression from names such as Larissa_Smilling.jpeg (typos tolerated)."""
+    stem = Path(path).stem.lower()
+    if 'neutral' in stem:
+        return 'neutral'
+    if 'smil' in stem:
+        return 'smiling'
+    if 'surpris' in stem:
+        return 'surprised'
+    return 'other'
+
+
+def split_by_expression(frame, assignment=None):
+    """Assign each person's neutral / smiling / surprised photograph to one split.
+
+    Every enrolled person then has exactly one training, one validation and one
+    test photograph, and every split contains the same expression for everyone.
+    People without all three expressions (and unknown folders) become unknown
+    test people, exactly as in split_sources.
+    """
+    assignment = assignment or DEFAULT_EXPRESSION_SPLIT
+    if sorted(assignment) != sorted(EXPRESSIONS) or sorted(assignment.values()) != ['test', 'train', 'validation']:
+        raise ValueError('assignment must map neutral/smiling/surprised to train/validation/test')
+    frame = frame.copy()
+    frame['expression'] = frame.path.map(expression_from_filename)
+    frame['split'] = 'excluded'
+    for user_id, group in frame[frame.status == 'ok'].groupby('user_id', sort=True):
+        complete = group.expression.value_counts().reindex(EXPRESSIONS).eq(1).all()
+        if user_id in UNKNOWN_FOLDERS or not complete:
+            frame.loc[group.index, 'split'] = 'unknown_test'
+        else:
+            known = group.expression.isin(EXPRESSIONS)
+            frame.loc[group.index[known], 'split'] = group.expression[known].map(assignment)
+            frame.loc[group.index[~known], 'split'] = 'excluded'
+    if frame.loc[frame.split == 'train', 'user_id'].nunique() < 2:
+        raise ValueError('Need at least two people with one neutral, one smiling and one surprised photograph')
+    return frame
+
+
+def _affine(rgb):
+    """Mild affine warp: 5 % zoom-out, 0.08 horizontal shear and a 3-pixel shift."""
+    import cv2
+
+    height, width = rgb.shape[:2]
+    centre_x, centre_y = width / 2, height / 2
+    scale, shear = .95, .08
+    matrix = np.array([[scale, shear, 0.], [0., scale, 0.]])
+    matrix[:, 2] = [centre_x - scale * centre_x - shear * centre_y + 3, centre_y - scale * centre_y + 3]
+    return cv2.warpAffine(rgb, matrix, (width, height), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
+
+
 def image_variants(rgb):
     """Deterministic mild augmentation and filters for inspection/training."""
     import cv2
@@ -98,6 +153,7 @@ def image_variants(rgb):
         'clahe': Image.fromarray(clahe_rgb),
         'gamma_080': Image.fromarray(cv2.LUT(rgb, gamma_lut)),
         'median_blur_3': Image.fromarray(cv2.medianBlur(rgb, 3)),
+        'affine': Image.fromarray(_affine(rgb)),
     }
 
 
@@ -113,23 +169,33 @@ def detect_inventory(frame, encoder):
     return frame, aligned
 
 
-def build_features(manifest, aligned, encoder):
+FEATURE_COLUMNS_PREFIX = 'embedding_'
+
+
+def build_features(manifest, aligned, encoder, augment_splits=('train',)):
+    """Embed every assigned photograph and its augmented copies.
+
+    The split is read from the manifest, which is frozen BEFORE this function
+    runs, so every augmented copy inherits the split of its source photograph.
+    Splits listed in ``augment_splits`` receive all variants from
+    ``image_variants``; other splits keep only the unaltered original.
+    """
     rows = []
     for row in manifest[manifest.split != 'excluded'].itertuples():
         crop = aligned[row.source_id]
         # Reuse landmark-aligned crops. Do not detect landmarks again after filters.
         rgb = encoder.cv.cvtColor(crop, encoder.cv.COLOR_BGR2RGB)
-        variants = image_variants(rgb) if row.split == 'train' else {'original': Image.fromarray(rgb)}
+        variants = image_variants(rgb) if row.split in augment_splits else {'original': Image.fromarray(rgb)}
         for name, image in variants.items():
             bgr = encoder.cv.cvtColor(np.array(image), encoder.cv.COLOR_RGB2BGR)
             feature = encoder.embed_aligned(bgr)
             record = dict(user_id=row.user_id, source_id=row.source_id, split=row.split,
                           augmentation=name, path=row.path)
-            record.update({f'embedding_{i:03d}': float(value) for i, value in enumerate(feature)})
+            record.update({f'{FEATURE_COLUMNS_PREFIX}{i:03d}': float(value) for i, value in enumerate(feature)})
             rows.append(record)
     frame = pd.DataFrame(rows)
-    if (frame[frame.split != 'train'].augmentation != 'original').any():
-        raise AssertionError('Validation/test augmentation is forbidden')
+    if (frame[~frame.split.isin(augment_splits)].augmentation != 'original').any():
+        raise AssertionError('Augmentation applied to a split that was not selected')
     if frame.groupby('source_id').split.nunique().max() != 1:
         raise AssertionError('Source leakage between splits')
     return frame
@@ -204,7 +270,53 @@ def calibrate_similarity(model, X_validation, y_validation):
                          wrong_identity_acceptance=proxy_far,
                          balanced_score=(tpr + 1 - proxy_far) / 2))
     curve = pd.DataFrame(rows)
-    # Prefer the lower threshold among equally good validation scores.
-    best = curve.sort_values(['balanced_score', 'threshold'], ascending=[False, True]).iloc[0]
-    model.similarity_threshold = float(best.threshold)
+    # Small validation sets give a plateau of equally good thresholds. Taking the
+    # middle of that plateau keeps a margin on both sides instead of always
+    # falling back to the most permissive (lowest) value.
+    best_score = curve.balanced_score.max()
+    tied = curve.loc[np.isclose(curve.balanced_score, best_score), 'threshold'].sort_values()
+    model.similarity_threshold = float(tied.iloc[len(tied) // 2])
     return curve
+
+
+def leave_one_identity_out(features, feature_columns, C=1., confidence_threshold=.5):
+    """Open-set check that needs no external images.
+
+    Each round hides one enrolled person completely: the model is fitted on the
+    remaining people's training rows (including augmented copies) and its cosine
+    gate is calibrated on their validation original photographs. Every original photograph of the hidden person is then
+    presented as an impostor, and the remaining people's test originals as
+    genuine attempts. Requires at least three enrolled identities.
+    """
+    enrolled = sorted(features.loc[features.split == 'train', 'user_id'].unique())
+    if len(enrolled) < 3:
+        raise ValueError('Leave-one-identity-out needs at least three enrolled identities')
+    originals = features[features.augmentation == 'original']
+    rows = []
+    for hidden in enrolled:
+        remaining = features.user_id.isin(enrolled) & (features.user_id != hidden)
+        train = features[remaining & (features.split == 'train')]
+        validation = features[remaining & (features.split == 'validation')]
+        if 'augmentation' in validation:
+            # Calibrate on real photographs; augmented copies only measure robustness.
+            validation = validation[validation.augmentation == 'original']
+        model = FaceAuthenticator(C=C, confidence_threshold=confidence_threshold).fit(
+            train[feature_columns].to_numpy(), train.user_id.to_numpy())
+        calibrate_similarity(model, validation[feature_columns].to_numpy(), validation.user_id.to_numpy())
+        attempts = {
+            'impostor': originals[originals.user_id == hidden],
+            'genuine': originals[originals.user_id.isin(enrolled) & (originals.user_id != hidden)
+                                 & (originals.split == 'test')],
+        }
+        for cohort, frame in attempts.items():
+            if frame.empty:
+                continue
+            predictions = model.predict(frame[feature_columns].to_numpy())
+            for row, prediction in zip(frame.itertuples(), predictions):
+                rows.append(dict(hidden_identity=hidden, cohort=cohort, user_id=row.user_id,
+                                 split=row.split, source_id=row.source_id, path=row.path,
+                                 prediction=prediction, accepted=prediction != 'unknown',
+                                 correct=(prediction == 'unknown') if cohort == 'impostor'
+                                 else (prediction == row.user_id),
+                                 similarity_threshold=model.similarity_threshold))
+    return pd.DataFrame(rows)
