@@ -16,6 +16,19 @@ need to be developed. No trained artifacts or measured results are included.
 | Kudakwashe | 03_voice_verification.ipynb | Audio collection, augmentation, speaker features and verification | voice_model.joblib |
 | Larissa | 04_system_integration.ipynb and main.py | Registry, authentication sequence, integration tests, CLI and video | Working application |
 
+## Face authentication (implemented)
+
+The face part is complete: `notebooks/02_face_recognition.ipynb`, the `face_auth/`
+package and `extract_face_features()` in `feature_extraction.py`. It uses the
+pretrained OpenCV Zoo SFace encoder (`face_recognition_sface_2021dec`, 128-value
+embedding) with the YuNet detector (`face_detection_yunet_2023mar`); both ONNX files
+are downloaded to `models/pretrained/` by the notebook and not committed. All four
+members have neutral, smiling and surprised photos, and `data/raw/images/unauthorized/`
+holds 14 non-member photos used only to test rejection. The rejection threshold is
+stored as `face.threshold` in `models/model_metadata.json`. Workflow, results and
+Colab/Kaggle instructions: [docs/face_recognition.md](docs/face_recognition.md).
+Face tests: `tests/test_face_pipeline.py`; face-only environment: `environment-face.yml`.
+
 ## Setup
 
 Use Python 3.11 or 3.12 in a virtual environment:
