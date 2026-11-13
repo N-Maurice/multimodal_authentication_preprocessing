@@ -80,8 +80,9 @@ differ (`customer_id_new` and `customer_id_legacy`); Patrick must validate the
 mapping before merging.
 
 Maurice and Larissa each have three facial images; Kudakwashe has one, and Patrick
-has none. Maurice, Larissa, and Kudakwashe each have two original audio recordings;
-Patrick has none. Add any remaining samples and separate unauthorized attempts.
+has none. Maurice, Larissa, Kudakwashe, and Patrick each have two original audio
+recordings. Patrick's MP4 files contain audio tracks; the loader decodes the audio
+and ignores video. Add any remaining samples and separate unauthorized attempts.
 Two recordings per speaker support only a provisional train/validation split;
 more independent captures are needed for a separate test set. The current WhatsApp
 OGG files use Opus and require an audio decoder that supports that codec.

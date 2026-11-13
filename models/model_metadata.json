@@ -8,7 +8,7 @@
   },
   "voice": {
     "owner": "Kudakwashe",
-    "threshold": 0.4016277670375178,
+    "threshold": 0.28519116126855437,
     "feature_columns": [
       "speaker_embedding_000",
       "speaker_embedding_001",
@@ -212,32 +212,31 @@
     "embedding_normalization": "L2",
     "silence_trim_top_db": 30,
     "source_counts_by_split": {
-      "test": 1,
-      "train": 3,
-      "validation": 3
+      "train": 4,
+      "validation": 4
     },
     "test_coverage": {
-      "speakers_with_test_recordings": [
-        "kudakwashe"
-      ],
+      "speakers_with_test_recordings": [],
       "speakers_missing_test_recordings": [
+        "kudakwashe",
         "larissa",
-        "maurice"
+        "maurice",
+        "patrick"
       ]
     },
     "validation_calibration": {
-      "validation_false_accept_rate": 0.16666666666666666,
-      "validation_false_reject_rate": 0.6666666666666666,
-      "validation_genuine_trials": 3,
-      "validation_impostor_trials": 6
+      "validation_false_accept_rate": 0.08333333333333333,
+      "validation_false_reject_rate": 0.0,
+      "validation_genuine_trials": 4,
+      "validation_impostor_trials": 12
     },
     "validation_metrics": {
-      "accuracy": 0.3333333333333333,
-      "macro_f1": 0.2222222222222222,
-      "log_loss": 1.19237620235741,
-      "false_accept_rate": 0.16666666666666666,
-      "false_reject_rate": 0.6666666666666666,
-      "recordings": 3
+      "accuracy": 0.75,
+      "macro_f1": 0.6666666666666666,
+      "log_loss": 1.125053817693952,
+      "false_accept_rate": 0.08333333333333333,
+      "false_reject_rate": 0.0,
+      "recordings": 4
     },
     "test_metrics": null
   },

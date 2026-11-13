@@ -8,12 +8,26 @@ import pandas as pd
 
 from voice_model import (
     calibrate_threshold,
+    discover_recordings,
     split_original_recordings,
     train_voice_model,
 )
 
 
 class VoiceModelTests(unittest.TestCase):
+    def test_discover_recordings_includes_mp4_audio_containers(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            audio_root = Path(temporary_directory)
+            speaker_dir = audio_root / "patrick"
+            speaker_dir.mkdir()
+            recording_path = speaker_dir / "patrick.mp4"
+            recording_path.touch()
+
+            recordings = discover_recordings(audio_root)
+
+        self.assertEqual(len(recordings), 1)
+        self.assertEqual(recordings[0]["path"], recording_path)
+
     def test_split_keeps_each_original_in_one_partition(self):
         recordings = [
             {"user_id": user, "source_id": f"{user}/{index}", "path": f"{user}_{index}.ogg"}

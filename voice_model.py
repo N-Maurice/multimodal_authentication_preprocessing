@@ -19,7 +19,7 @@ from feature_extraction import (
     load_voice_audio,
 )
 
-AUDIO_EXTENSIONS = {".flac", ".m4a", ".mp3", ".ogg", ".wav"}
+AUDIO_EXTENSIONS = {".flac", ".m4a", ".mp3", ".mp4", ".ogg", ".wav"}
 EMBEDDING_PREFIX = "speaker_embedding_"
 
 
