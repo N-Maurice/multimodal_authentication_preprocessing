@@ -1,21 +1,24 @@
 {
-  "status": "not_trained",
-  "face": {
-    "owner": "Maurice",
-    "threshold": null,
-    "feature_columns": [],
-    "pretrained_model": null
-  },
-  "voice": {
-    "owner": "Kudakwashe",
-    "threshold": null,
-    "feature_columns": [],
-    "pretrained_model": null
-  },
   "product": {
-    "owner": "Patrick",
-    "target": "product_category",
-    "feature_columns": []
-  },
-  "integration_owner": "Larissa"
+    "model_name": "Random Forest",
+    "feature_columns": [
+      "engagement_score",
+      "purchase_interest_score",
+      "social_media_platform",
+      "social_platform_count",
+      "purchase_month",
+      "purchase_dayofweek",
+      "is_weekend",
+      "engagement_to_interest_ratio",
+      "cust_tx_count",
+      "cust_avg_spend"
+    ],
+    "classes": [
+      "Books",
+      "Clothing",
+      "Electronics",
+      "Groceries",
+      "Sports"
+    ]
+  }
 }
