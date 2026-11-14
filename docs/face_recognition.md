@@ -28,7 +28,7 @@ training, evaluation and export, rather than supplying placeholder metrics.
 | A. Data | 2 | 2.1 coverage (4 members × neutral/smiling/surprised); 2.2 resize to ≤ 1024 px; 2.3 quality and duplicates; 2.4 sample images of consented members |
 | | 3 | Face detection (YuNet 2023mar) and alignment for all 12 photos, crop sharpness |
 | | 4 | Split of the **original** photos before any augmentation: neutral → train, smiling → validation, surprised → test |
-| B. Augmentation and features | 5 | 5.1 twelve augmentations on every photo, copies kept in their source split; 5.2 "still the same person?" check; 5.3 21 exported PNGs per member |
+| B. Augmentation and features | 5 | 5.1 twelve augmentations on every photo, copies kept in their source split; 5.2 "still the same person?" check; 5.3 21 exported JPEGs per member |
 | | 6 | `extract_face_features` (SFace 2021dec, 128 values), `image_features.csv`, per-photo checklist |
 | | 7 | PCA embedding map and validation-vs-member similarity |
 | C. Model | 8 | Dummy baseline, `C` comparison and validation curve |
@@ -123,7 +123,7 @@ All paths are relative to the project folder (the notebook works from there).
 - `data/processed/face_manifest.csv`: every original photo, expression and split.
 - `data/processed/image_features.csv`: exactly `user_id`, `source_id`, `split`,
   `augmentation`, then `embedding_000` … `embedding_127` (338 rows: 26 photos × 13 versions).
-- `data/processed/images/<user_id>/`: 21 processed PNGs per enrolled member.
+- `data/processed/images/<user_id>/`: 21 processed JPEGs per enrolled member (quality 92).
 - `models/face_model.joblib`: `FaceAuthenticator` with `classes_` and `predict_proba`,
   member centroids and both thresholds.
 - `models/pretrained/*.onnx`: the two pretrained models; downloaded explicitly.
