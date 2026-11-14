@@ -1,5 +1,5 @@
 {
-  "status": "not_trained",
+  "status": "trained",
   "face": {
     "owner": "Maurice",
     "threshold": 0.41726050420168065,
