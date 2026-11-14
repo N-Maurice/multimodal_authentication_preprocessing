@@ -1,0 +1,10 @@
+scenario,face,voice,expect_outcome,expect_stage
+authorized_larissa,data/raw/images/larissa/Larissa_Surprised.jpeg,data/raw/audio/larissa/Larissa_Confirm transaction.ogg,granted,done
+authorized_maurice,data/raw/images/maurice/Maurice_surprised.jpeg,data/raw/audio/maurice/Maurice_Approved.ogg,granted,done
+authorized_kudakwashe,data/raw/images/kudakwashe/Kudakwashe_Surprised.jpeg,data/raw/audio/kudakwashe/Kudakwashe_sample_01.ogg,granted,done
+authorized_patrick,data/raw/images/patrick/Patrick_Surprised.jpeg,data/raw/audio/patrick/Patrick_Confirm_Transaction.mp4,granted,done
+unknown_face,data/raw/images/unauthorized/unauthorized_01.jpeg,data/raw/audio/larissa/Larissa_Confirm transaction.ogg,denied,face
+blank_image,@blank_image,data/raw/audio/larissa/Larissa_Confirm transaction.ogg,denied,face
+unknown_voice,data/raw/images/larissa/Larissa_Surprised.jpeg,data/raw/audio/unauthorized/unauthorized_voice.wav,denied,voice
+silent_audio,data/raw/images/larissa/Larissa_Surprised.jpeg,@silence,denied,voice
+mismatched_voice,data/raw/images/larissa/Larissa_Surprised.jpeg,data/raw/audio/maurice/Maurice_Approved.ogg,denied,match
