@@ -3,10 +3,10 @@
 Formative 2 team project: verify a face, verify the same person's voice, then
 predict a product category from that customer's tabular features.
 
-This repository contains the agreed structure, notebooks and a CLI scaffold.
-The voice feature and training pipeline is implemented; its artifacts require
-running the notebook. The face/product models, full integration, and final PDF
-remain to be completed.
+The product recommendation, face authentication and voice verification models
+are trained, and **`app.py` is the main application**: you sign in, the webcam
+checks your face, the microphone checks your voice, and only then is a product
+recommended. See [Running the application](#running-the-application-apppy).
 
 ## Team ownership
 
@@ -15,7 +15,7 @@ remain to be completed.
 | Patrick | 01_product_recommendation.ipynb | Merge, engineer features, train and evaluate product prediction | product_model.joblib |
 | Maurice | 02_face_recognition.ipynb | Image collection, augmentation, pretrained features, identity classification and rejection | face_model.joblib |
 | Kudakwashe | 03_voice_verification.ipynb | Audio collection, augmentation, speaker features and verification | voice_model.joblib |
-| Larissa | 04_system_integration.ipynb and main.py | Registry, authentication sequence, integration tests, CLI and video | Working application |
+| Larissa | 04_system_integration.ipynb and the integration core in app.py | Registry, authentication sequence, integration tests, CLI and video | Working application |
 
 ## Face authentication (implemented)
 
@@ -71,7 +71,8 @@ documented by its owner.
 ├── models/model_metadata.json
 ├── feature_extraction.py
 ├── voice_model.py
-├── main.py
+├── app.py                   # main application (interactive and scripted)
+├── run_demo.py              # scripted demo scenarios
 ├── reports/
 │   ├── final_report.md
 │   └── contributions.md
@@ -132,20 +133,47 @@ held-out accuracy, macro F1 and log loss, plus false acceptance/rejection rates
 and unknown-person tests. With very few original samples, report limitations
 explicitly. Keep recommendation splits grouped by customer or time as appropriate.
 
-After completing all notebooks and extractors:
-
-```bash
-python main.py --face data/raw/images/maurice/Maurice_Neutral.jpeg \
-  --voice data/raw/audio/maurice/Maurice_Approved.ogg
-python -m pytest -q
-```
-
-The example paths illustrate invocation; use held-out samples for evaluation.
-The CLI currently reports a setup error until extractors and artifacts exist.
-Exit codes: `0` success, `1` authentication denied, `2` missing/invalid setup.
+Exit codes of `app.py`: `0` access granted, `1` denied or cancelled, `2` missing/invalid setup.
 This is a classroom simulation without liveness or replay protection. Classifier
 confidence alone does not establish biometric security. Only load trusted joblib
 artifacts. Obtain participant consent before committing or publishing biometrics.
+
+## Running the application (app.py)
+
+`app.py` is the main application. Run it without options for the guided terminal app:
+
+1. **Sign in** with your username (or email, if the registry has an `email` column).
+2. **Face:** a small camera window opens with a live preview and a face box. Click
+   the picture, press Space or **📸 Take photo** once your face is framed (green box).
+   The face must match the account you signed in with.
+3. **Request** your product recommendation.
+4. **Voice:** say “Confirm transaction” after the countdown; the voice must match
+   the same account.
+5. **Product:** the recommendation is shown only after both checks pass.
+
+Every step offers **[R] Retry** or **[Q] Quit**. After three failed tries at the same
+step (`--max-attempts`) the session ends. Without a desktop display, or with
+`--no-window`, the photo is taken automatically in the terminal once one face is steady.
+
+```bash
+python app.py
+python app.py --photo face.jpg --audio voice.ogg   # same guided flow using files
+```
+
+For a single scripted attempt without sign-in or menus (used by `run_demo.py`, the
+tests and quick demonstrations), pass the face and voice files directly:
+
+```bash
+python app.py --face data/raw/images/maurice/Maurice_surprised.jpeg \
+  --voice data/raw/audio/maurice/Maurice_Approved.ogg --yes
+python run_demo.py          # all scripted scenarios -> reports/integration_results.csv
+python -m pytest -q         # all tests
+```
+
+Recording uses `arecord` (alsa-utils) or `ffmpeg`. Captures are deleted after each
+attempt unless `--keep-captures <folder>` is given; every try is logged to
+`reports/access_log.csv`. Run `AUTH_GUI_TESTS=1 python -m pytest tests/test_app.py`
+on a desktop to include the camera-window test.
 
 Complete the report, contributions, repository link and demonstration video link
 before submission.

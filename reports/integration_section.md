@@ -4,7 +4,7 @@ Paste into `final_report.md` / the PDF as the "System demonstration" section. Fi
 `python run_demo.py` (saved in `reports/integration_results.csv`); do not type numbers the code did not produce.
 
 ## Design
-`main.py` runs the three checkpoints from the assignment diagram in order:
+`app.py` runs the three checkpoints from the assignment diagram in order:
 
 1. **Face check.** `extract_face_features()` (YuNet + SFace, the same function used in training) turns the photo into a
    128-number embedding. The face model (`FaceAuthenticator`) accepts it only if the classifier probability is at least
@@ -59,8 +59,8 @@ Record the terminal (and the notebook for the last step). Use the test photos, n
 |---|---|---|
 | 0:00 | Repo tree | Team, goal: face then voice verification before a product recommendation. |
 | 0:20 | Flow diagram | The three checkpoints; unknowns are rejected at each one. |
-| 0:40 | `python main.py` (prompts) | Enter an authorized face path. It shows "Face recognised", then asks to request a prediction. |
-| 1:10 | Enter the same member's voice path | "Voice approved", then "ACCESS GRANTED, Recommended product: ...". |
+| 0:40 | `python app.py` | Sign in with a username; the camera window opens; take the photo. It shows "Face verified", then asks to request a recommendation. |
+| 1:10 | Say "Confirm transaction" after the countdown | "Voice verified", then the "ACCESS GRANTED" box with the recommended product. |
 | 1:40 | Run with an **unauthorized photo** + a valid voice | Stops at the face check; the voice file is never processed. |
 | 2:10 | Run with a valid face + the **unauthorized voice** | Denied at the voice check, no product. |
 | 2:30 | Face of member A + voice of member B | Denied at the identity-match check. |
@@ -70,9 +70,10 @@ Record the terminal (and the notebook for the last step). Use the test photos, n
 
 Commands (quote paths that contain spaces):
 ```
-python main.py --face data/raw/images/larissa/Larissa_Surprised.jpeg --voice "data/raw/audio/larissa/Larissa_Confirm transaction.ogg"
-python main.py --face data/raw/images/unauthorized/unauthorized_01.jpeg --voice "data/raw/audio/larissa/Larissa_Confirm transaction.ogg"
-python main.py --face data/raw/images/larissa/Larissa_Surprised.jpeg --voice "data/raw/audio/maurice/Maurice_Approved.ogg"
+python app.py
+python app.py --face data/raw/images/larissa/Larissa_Surprised.jpeg --voice "data/raw/audio/larissa/Larissa_Confirm transaction.ogg" --yes
+python app.py --face data/raw/images/unauthorized/unauthorized_01.jpeg --voice "data/raw/audio/larissa/Larissa_Confirm transaction.ogg" --yes
+python app.py --face data/raw/images/larissa/Larissa_Surprised.jpeg --voice "data/raw/audio/maurice/Maurice_Approved.ogg" --yes
 python run_demo.py
 python -m unittest discover -s tests
 ```
