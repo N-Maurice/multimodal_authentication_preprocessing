@@ -157,12 +157,12 @@ def test_processed_export_writes_twenty_one_named_images_and_preserves_splits(tm
         path = Path(row.output_path)
         assert path.is_file()
         assert path.name.startswith(row.user_id + '__source_')
-        assert path.name.endswith('__' + row.augmentation + '.png')
+        assert path.name.endswith('__' + row.augmentation + '.jpg')
         assert ' ' not in path.name
     assert (output.parent / 'processed_image_manifest.csv').is_file()
     # Reruns cannot multiply the prepared dataset.
     export_processed_images(manifest, output)
-    assert len(list(output.rglob('*.png'))) == 42
+    assert len(list(output.rglob('*.jpg'))) == 42
 
 
 def test_each_notebook_code_cell_has_preceding_markdown():

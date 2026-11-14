@@ -60,7 +60,8 @@ def export_processed_images(source_manifest, output_dir):
     originals and explicit unknown folders are skipped. Every output retains its
     original source split; these visualization/export images are never loaded by
     the training pipeline. Reruns overwrite only the same deterministic filenames.
-    Existing unexpected PNGs cause an error instead of deleting user files.
+    Images are saved as high-quality JPEG (quality 92) to keep the folder small.
+    Existing unexpected JPEGs cause an error instead of deleting user files.
     """
     output_dir = Path(output_dir)
     rows, skipped, plans = [], [], []
@@ -78,11 +79,11 @@ def export_processed_images(source_manifest, output_dir):
             stem = safe_name(Path(row.path).stem)
             prefix = f'{safe_name(user_id)}__source_{number:02d}_{stem}__{row.source_id[:12]}'
             for variant in EXPORT_VARIANTS:
-                path = person_dir / f'{prefix}__{variant}.png'
+                path = person_dir / f'{prefix}__{variant}.jpg'
                 expected.add(path.name)
                 person_plan.append((row, variant, path))
         if person_dir.exists():
-            extra = {p.name for p in person_dir.glob('*.png')} - expected
+            extra = {p.name for p in person_dir.glob('*.jpg')} - expected
             if extra:
                 raise ValueError(f'Archive existing processed images in {person_dir} before changing source images: {sorted(extra)}')
         plans.extend(person_plan)
@@ -91,7 +92,7 @@ def export_processed_images(source_manifest, output_dir):
         # Cache one original's variants rather than recomputing for each file.
         if not rows or rows[-1]['source_id'] != row.source_id:
             variants = image_variants(read_rgb(row.path))
-        variants[variant].save(path, format='PNG')
+        variants[variant].convert('RGB').save(path, format='JPEG', quality=92)
         rows.append(dict(user_id=row.user_id, source_id=row.source_id,
                          source_path=row.path, split=row.split,
                          augmentation=variant, output_path=str(path)))
