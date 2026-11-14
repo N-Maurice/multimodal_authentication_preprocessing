@@ -59,7 +59,7 @@ class CliSmokeTests(unittest.TestCase):
         t = cls.tmp
         (t / "models").mkdir()
         (t / "data/processed").mkdir(parents=True)
-        shutil.copy(ROOT / "main.py", t / "main.py")
+        shutil.copy(ROOT / "app.py", t / "app.py")
         shutil.copytree(ROOT / "face_auth", t / "face_auth")
         (t / "feature_extraction.py").write_text(FAKE_EXTRACTORS)
         rng = np.random.default_rng(0)
@@ -96,7 +96,7 @@ class CliSmokeTests(unittest.TestCase):
 
     def cli(self, face, voice):
         return subprocess.run(
-            [sys.executable, "main.py", "--yes", "--face", f"{face}.txt", "--voice", f"{voice}.txt"],
+            [sys.executable, "app.py", "--yes", "--face", f"{face}.txt", "--voice", f"{voice}.txt"],
             cwd=self.tmp, capture_output=True, text=True)
 
     def test_granted(self):

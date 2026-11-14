@@ -1,7 +1,7 @@
 """Check authorization ordering without needing real biometric artifacts."""
 import unittest
 import numpy as np
-from main import AccessDenied, authenticate
+from app import AccessDenied, authenticate
 
 
 class Model:

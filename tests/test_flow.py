@@ -1,4 +1,4 @@
-"""Sequential-flow tests for main.attempt and run_demo using fake models."""
+"""Sequential-flow tests for app.attempt and run_demo using fake models."""
 import csv
 import tempfile
 import unittest
@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-import main
+import app
 import run_demo
 
 
@@ -59,7 +59,7 @@ def make_ctx(face, voice, extract_face=None, extract_voice=None):
 class FlowTests(unittest.TestCase):
     def test_full_transaction_is_granted_and_predicts_once(self):
         ctx, _ = make_ctx(Model(["larissa"], [.95]), Model(["larissa"], [.9]))
-        r = main.attempt(ctx, "f", "v")
+        r = app.attempt(ctx, "f", "v")
         self.assertEqual((r["outcome"], r["stage"], r["identity"], r["prediction"]),
                          ("granted", "done", "larissa", "Books"))
         self.assertEqual(r["product_confidence"], .6)
@@ -68,7 +68,7 @@ class FlowTests(unittest.TestCase):
     def test_face_model_zero_scores_mean_rejected(self):
         # FaceAuthenticator returns all zeros for a rejected face.
         ctx, calls = make_ctx(Model(["larissa", "maurice"], [0., 0.]), Model(["larissa"], [1.]))
-        r = main.attempt(ctx, "f", "v")
+        r = app.attempt(ctx, "f", "v")
         self.assertEqual((r["outcome"], r["stage"]), ("denied", "face"))
         self.assertEqual(calls["voice"], 0)
         self.assertEqual(ctx["product_model"].calls, 0)
@@ -76,7 +76,7 @@ class FlowTests(unittest.TestCase):
     def test_unknown_face_never_reaches_voice_or_product(self):
         ctx, calls = make_ctx(Model(["larissa", "maurice"], [.55, .45]), Model(["larissa"], [1.]))
         ctx["face_gate"] = .8
-        r = main.attempt(ctx, "f", "v")
+        r = app.attempt(ctx, "f", "v")
         self.assertEqual((r["outcome"], r["stage"], r["prediction"]), ("denied", "face", ""))
         self.assertEqual(calls["voice"], 0)  # voice file is not even processed
         self.assertEqual(ctx["voice_model"].calls, 0)
@@ -86,7 +86,7 @@ class FlowTests(unittest.TestCase):
         def no_face(_):
             raise ValueError("no face found")
         ctx, calls = make_ctx(Model(["larissa"], [.95]), Model(["larissa"], [.9]), extract_face=no_face)
-        r = main.attempt(ctx, "f", "v")
+        r = app.attempt(ctx, "f", "v")
         self.assertEqual((r["outcome"], r["stage"]), ("denied", "face"))
         self.assertEqual(calls["voice"], 0)
 
@@ -94,38 +94,38 @@ class FlowTests(unittest.TestCase):
         def silent(_):
             raise ValueError("no speech")
         ctx, _ = make_ctx(Model(["larissa"], [.95]), Model(["larissa"], [.9]), extract_voice=silent)
-        r = main.attempt(ctx, "f", "v")
+        r = app.attempt(ctx, "f", "v")
         self.assertEqual((r["outcome"], r["stage"], r["prediction"]), ("denied", "voice", ""))
         self.assertEqual(ctx["product_model"].calls, 0)
 
     def test_unknown_voice_is_denied_without_prediction(self):
         ctx, _ = make_ctx(Model(["larissa"], [.95]), Model(["larissa", "maurice"], [.5, .5]))
-        r = main.attempt(ctx, "f", "v")
+        r = app.attempt(ctx, "f", "v")
         self.assertEqual((r["outcome"], r["stage"]), ("denied", "voice"))
         self.assertEqual(ctx["product_model"].calls, 0)
 
     def test_other_enrolled_voice_is_denied_as_mismatch(self):
         ctx, _ = make_ctx(Model(["larissa"], [.95]), Model(["maurice"], [.99]))
-        r = main.attempt(ctx, "f", "v")
+        r = app.attempt(ctx, "f", "v")
         self.assertEqual((r["outcome"], r["stage"]), ("denied", "match"))
         self.assertEqual(ctx["product_model"].calls, 0)
 
     def test_request_step_happens_between_face_and_voice(self):
         ctx, calls = make_ctx(Model(["larissa"], [.95]), Model(["larissa"], [.9]))
         seen = []
-        main.attempt(ctx, "f", "v", pause=lambda name: seen.append((name, dict(calls))))
+        app.attempt(ctx, "f", "v", pause=lambda name: seen.append((name, dict(calls))))
         self.assertEqual(seen, [("Larissa", {"face": 1, "voice": 0})])
 
     def test_missing_inference_row_is_a_setup_error(self):
         ctx, _ = make_ctx(Model(["larissa"], [.95]), Model(["larissa"], [.9]))
         ctx["customers"] = ctx["customers"].iloc[1:]
         with self.assertRaises(ValueError):
-            main.attempt(ctx, "f", "v")
+            app.attempt(ctx, "f", "v")
 
     def test_denied_attempt_is_logged_without_prediction(self):
         with tempfile.TemporaryDirectory() as folder:
             log = Path(folder) / "reports" / "access_log.csv"
-            main.log_attempt(log, "a.jpeg", "b.ogg",
+            app.log_attempt(log, "a.jpeg", "b.ogg",
                              {"outcome": "denied", "stage": "face", "identity": "", "reason": "x"})
             with log.open() as handle:
                 rows = list(csv.DictReader(handle))

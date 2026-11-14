@@ -1,4 +1,4 @@
-"""Run the scripted demo scenarios through the same code path as main.py.
+"""Run the scripted demo scenarios through the same code path as app.py.
 
     python run_demo.py                       # all scenarios in data/processed/demo_scenarios.csv
     python run_demo.py --scenarios my.csv
@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pandas as pd
 
-import main as app
+import app
 
 ROOT = Path(__file__).resolve().parent
 
