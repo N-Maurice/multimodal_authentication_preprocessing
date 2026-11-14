@@ -1,0 +1,56 @@
+time,face_file,voice_file,outcome,stopped_at,identity,reason
+2026-11-14T17:48:57,Larissa_Surprised.jpeg,Larissa_Confirm transaction.ogg,granted,done,larissa,
+2026-11-14T18:12:04,Maurice_surprised.jpeg,Maurice_Approved.ogg,granted,done,maurice,
+2026-11-14T18:18:04,Maurice_surprised.jpeg,Maurice_Approved.ogg,granted,done,maurice,
+2026-11-14T18:18:06,Maurice_surprised.jpeg,,denied,face,maurice,The face does not match the account you signed in with
+2026-11-14T18:18:09,unauthorized_05.jpeg,,denied,face,,Face was not recognised as a registered user
+2026-11-14T18:18:39,Maurice_surprised.jpeg,Larissa_Confirm transaction.ogg,denied,match,maurice,Voice belongs to a different user than the face
+2026-11-14T18:18:42,Kudakwashe_Surprised.jpeg,,denied,request,kudakwashe,Request cancelled by the user
+2026-11-14T18:28:04,face_capture.jpg,,denied,face,,No clear face was seen in time
+2026-11-14T18:28:26,face_capture.jpg,,denied,face,,Face was not recognised as a registered user
+2026-11-14T18:29:17,face_capture.jpg,,denied,face,,Face was not recognised as a registered user
+2026-11-14T18:30:20,face_capture.jpg,voice_capture.wav,denied,match,maurice,Voice belongs to a different user than the face
+2026-11-14T18:31:11,face_capture.jpg,voice_capture.wav,denied,match,maurice,Voice belongs to a different user than the face
+2026-11-14T18:32:52,face_capture.jpg,voice_capture.wav,denied,voice,maurice,Voice was not verified as a registered user
+2026-11-14T18:33:42,face_capture.jpg,voice_capture.wav,granted,done,maurice,
+2026-11-14T18:34:59,face_capture.jpg,voice_capture.wav,denied,voice,maurice,Voice was not verified as a registered user
+2026-11-14T18:41:39,Maurice_surprised.jpeg,,denied,face,larissa,The face does not match the account you signed in with
+2026-11-14T18:41:42,Larissa_Surprised.jpeg,Maurice_Approved.ogg,denied,match,larissa,Voice belongs to a different user than the face
+2026-11-14T18:41:42,Larissa_Surprised.jpeg,Larissa_Confirm transaction.ogg,granted,done,larissa,
+2026-11-14T18:41:45,Maurice_surprised.jpeg,,denied,face,larissa,The face does not match the account you signed in with
+2026-11-14T18:41:45,Maurice_surprised.jpeg,,denied,face,larissa,The face does not match the account you signed in with
+2026-11-14T18:41:45,Maurice_surprised.jpeg,,denied,face,larissa,The face does not match the account you signed in with
+2026-11-14T18:41:47,Maurice_surprised.jpeg,,denied,face,larissa,The face does not match the account you signed in with
+2026-11-14T18:46:33,face_capture.jpg,,denied,face,maurice,Face was not recognised as a registered user
+2026-11-14T18:47:28,face_capture.jpg,voice_capture.wav,denied,voice,maurice,Voice was not verified as a registered user
+2026-11-14T18:47:51,face_capture.jpg,voice_capture.wav,denied,voice,maurice,Voice was not verified as a registered user
+2026-11-14T18:48:11,face_capture.jpg,voice_capture.wav,granted,done,maurice,
+2026-11-14T18:49:29,face_capture.jpg,,denied,face,maurice,Face was not recognised as a registered user
+2026-11-14T18:49:42,face_capture.jpg,,denied,face,maurice,Face was not recognised as a registered user
+2026-11-14T18:50:24,face_capture.jpg,voice_capture.wav,denied,match,maurice,Voice belongs to a different user than the face
+2026-11-14T18:50:35,face_capture.jpg,voice_capture.wav,granted,done,maurice,
+2026-11-14T22:36:19,face_capture.jpg,,denied,face,maurice,Could not open camera 0. Is it connected and not used by another app?
+2026-11-14T22:36:23,face_capture.jpg,,denied,face,maurice,Could not open camera 0. Is it connected and not used by another app?
+2026-11-14T22:36:28,face_capture.jpg,,denied,face,maurice,Could not open camera 0. Is it connected and not used by another app?
+2026-11-14T22:36:46,face_capture.jpg,,denied,face,maurice,Could not open camera 0. Is it connected and not used by another app?
+2026-11-14T22:37:50,face_capture.jpg,voice_capture.wav,denied,match,maurice,Voice belongs to a different user than the face
+2026-11-14T22:38:04,face_capture.jpg,voice_capture.wav,granted,done,maurice,
+2026-11-14T22:42:01,face_capture.jpg,,denied,face,maurice,Could not open camera 0. Is it connected and not used by another app?
+2026-11-14T22:42:20,face_capture.jpg,,denied,face,maurice,Could not open camera 0. Is it connected and not used by another app?
+2026-11-14T22:43:19,face_capture.jpg,voice_capture.wav,denied,match,maurice,Voice belongs to a different user than the face
+2026-11-14T22:43:41,face_capture.jpg,voice_capture.wav,granted,done,maurice,
+2026-11-14T22:44:19,face_capture.jpg,,denied,face,kudakwashe,Could not open camera 0. Is it connected and not used by another app?
+2026-11-14T22:44:27,face_capture.jpg,,denied,face,kudakwashe,Could not open camera 0. Is it connected and not used by another app?
+2026-11-14T22:44:51,face_capture.jpg,,denied,face,kudakwashe,The face does not match the account you signed in with
+2026-11-14T23:22:54,face_capture.jpg,,denied,face,maurice,Could not open camera 0. Is it connected and not used by another app?
+2026-11-14T23:23:43,face_capture.jpg,voice_capture.wav,denied,match,maurice,Voice belongs to a different user than the face
+2026-11-14T23:24:03,face_capture.jpg,voice_capture.wav,granted,done,maurice,
+2026-11-14T23:24:44,face_capture.jpg,,denied,face,kudakwashe,Could not open camera 0. Is it connected and not used by another app?
+2026-11-14T23:24:58,face_capture.jpg,,denied,face,kudakwashe,Face was not recognised as a registered user
+2026-11-14T23:31:17,face_capture.jpg,,denied,face,maurice,Could not open camera 0. Is it connected and not used by another app?
+2026-11-14T23:32:03,face_capture.jpg,voice_capture.wav,denied,match,maurice,Voice belongs to a different user than the face
+2026-11-14T23:32:21,face_capture.jpg,voice_capture.wav,granted,done,maurice,
+2026-11-14T23:33:09,face_capture.jpg,,denied,face,kudakwashe,The face does not match the account you signed in with
+2026-11-14T23:33:20,face_capture.jpg,,denied,face,kudakwashe,The face does not match the account you signed in with
+2026-11-14T23:59:36,Patrick_Surprised.jpeg,Patrick_Confirm_Transaction.mp4,granted,done,patrick,
+2026-11-14T23:59:45,Kudakwashe_Surprised.jpeg,Kudakwashe_sample_01.ogg,granted,done,kudakwashe,

@@ -1,0 +1,10 @@
+scenario,expected,actual,status,detail,identity,face_conf,voice_conf
+authorized_larissa,granted@done,granted@done,PASS,Groceries,larissa,0.932,0.365
+authorized_maurice,granted@done,granted@done,PASS,Electronics,maurice,0.817,0.545
+authorized_kudakwashe,granted@done,granted@done,PASS,Electronics,kudakwashe,0.982,0.358
+authorized_patrick,granted@done,granted@done,PASS,Sports,patrick,0.979,0.569
+unknown_face,denied@face,denied@face,PASS,Face was not recognised as a registered user,,,
+blank_image,denied@face,denied@face,PASS,"Face image could not be used (Expected exactly one face, detected 0)",,,
+unknown_voice,denied@voice,-,SKIPPED,missing file: data/raw/audio/unauthorized/unauthorized_voice.wav,,,
+silent_audio,denied@voice,denied@voice,PASS,Voice sample could not be used (Audio contains no speech after silence trimming: /tmp/tmp8uo1s77o/silence.wav),larissa,0.932,
+mismatched_voice,denied@match,denied@match,PASS,Voice belongs to a different user than the face,larissa,0.932,
